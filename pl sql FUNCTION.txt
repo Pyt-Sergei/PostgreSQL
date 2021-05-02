@@ -39,7 +39,7 @@ SELECT isaddress('adsbf@gmail.com');
 
 
 
-Тусты :
+Тесты :
 @mail.ru - False
 sdvsd    - False
 asfas-@mail.ru  - False
