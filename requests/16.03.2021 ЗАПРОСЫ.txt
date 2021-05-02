@@ -1,0 +1,85 @@
+1.
+ѕолучить фамилию клиента и его максимальный платеж. 
+2.
+ѕолучить название города, в котором имеетс€ хот€ бы 20 платежей. 
+3.
+ѕолучить фамилию клиента, его платеж, среднее значение платежей за последние 4 транзакции. 
+4.
+ѕолучить из таблицы geo все названи€ без потомков, которые €вл€ютс€ дочерними по отношению к –оссии. 
+5.
+ѕолучить фамилию клиента, у которого все платежи больше чем средний платеж по всем.
+6.
+ ѕолучить фамилию клиента, его платеж и сумму всех платежей всех клиентов. 
+7.
+ѕолучить страну, в которой не было платежей. 
+8.
+ѕолучить страну с максимальным суммой платежей. 
+9.
+ѕолучить город с максимальным количеством платежей. 
+10.
+ѕолучить названи€ городов, сумму платежей в городах, количество клиентов. 
+11.
+ѕроранжировать города по сумме платежей, т.е. чем больше сумма тем меньше ранг. 
+12.
+ѕолучить фамилию клиента и последний его платеж.
+
+1.
+SELECT last_name, MAX(amount) FROM customer c, payment p WHERE c.customer_id = p.customer_id
+GROUP BY c.customer_id
+
+2.
+SELECT c.city, COUNT(amount)  FROM city c JOIN address a ON c.city_id = a.city_id JOIN customer cl ON a.address_id = cl.address_id JOIN payment p ON cl.customer_id = p.customer_id
+GROUP BY c.city HAVING COUNT(amount) >= 20
+
+3.
+SELECT last_name, AVG(amount) OVER (PARTITION BY c.customer_id 
+ORDER BY p.payment_id DESC ROWS BETWEEN CURRENT ROW AND 3 FOLLOWING) FROM customer c, payment p WHERE c.customer_id = p.customer_id
+
+4.
+WITH RECURSIVE r AS(
+    
+SELECT id, name, parent_id FROM geo WHERE parent_id = 5
+
+UNION 
+
+SELECT geo.id, geo.name, geo.parent_id FROM geo JOIN r ON geo.parent_id = r.id
+)
+
+SELECT * FROM geo WHERE id NOT IN (SELECT id FROM r )
+
+5.
+SELECT DISTINCT(last_name) FROM customer c, payment p 
+WHERE (SELECT AVG(amount) FROM payment) < ALL( SELECT amount FROM payment p1 WHERE p1.customer_id = c.customer_id)
+6.
+SELECT last_name, amount, SUM(amount) OVER() FROM payment p, customer c WHERE c.customer_id = p.customer_id
+
+7.
+SELECT DISTINCT country FROM country con JOIN  city c ON con.country_id = c.country_id JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id 
+WHERE NOT (amount > 0)
+
+8.
+SELECT country, SUM(p.amount) summa FROM country con JOIN  city c ON con.country_id = c.country_id 
+JOIN address a ON c.city_id = a.city_id JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id 
+GROUP BY country ORDER BY summa DESC LIMIT 1
+
+9.
+SELECT DISTINCT LAST_VALUE(city) OVER() FROM  
+( SELECT city, COUNT(p.payment_id)  FROM city c JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id ORDER BY count) foo
+
+SELECT city, COUNT(p.payment_id)  FROM city c JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id ORDER BY count DESC LIMIT 1
+
+10.
+SELECT city, SUM(p.amount), COUNT(ct.customer_id) clients FROM city c 
+JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id
+
+11.
+SELECT city, SUM(p.amount), RANK() OVER(ORDER BY SUM(p.amount) DESC ) 
+FROM city c JOIN address a ON c.city_id = a.city_id JOIN customer ct ON ct.address_id = a.address_id 
+JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id
+
+12.
+SELECT last_name, amount, payment_date FROM customer c, payment p WHERE c.customer_id = p.customer_id ORDER BY ( c.customer_id, p.payment_date)

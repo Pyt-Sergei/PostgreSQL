@@ -1,0 +1,39 @@
+SELECT l1.id, l1.name, l1.parent_id, l2.id, l2.name, l2.parent_id, l3.id, l3.name, l3.parent_id FROM geo l1 
+LEFT OUTER JOIN geo l2  ON l1.id = l2.parent_id LEFT OUTER JOIN geo l3 ON l2.id = l3.parent_id WHERE l1.parent_id = 1
+
+
+WITH RECURSIVE r as (
+   SELECT 1 as id, 1 as fact
+
+UNION
+    SELECT id+1 as id, fact*(id+1) 
+    FROM r
+    WHERE id < 7
+)
+
+
+
+WITH RECURSIVE r as (
+   SELECT id,name, parent_id, 1 as level FROM geo WHERE id = 8
+
+UNION
+    SELECT geo.id, geo.name, geo.parent_id, r.level + 1
+    FROM geo JOIN r ON geo.id = r.parent_id
+   
+)
+
+
+
+
+WITH RECURSIVE r as (
+   SELECT id,name, parent_id, 1 as level, '/' || geo.name as path, 
+   ( SELECT COUNT(l2.parent_id) FROM geo l2 WHERE l2.parent_id = 1) as kids  FROM geo WHERE id = 1
+
+UNION
+    SELECT geo.id, geo.name, geo.parent_id, r.level + 1, r.path || '/' || geo.name,
+    ( SELECT COUNT(l3.parent_id) FROM geo l3 WHERE l3.parent_id = geo.id) as kids
+    FROM geo JOIN r ON geo.parent_id = r.id
+   
+)
+
+SELECT id, name, parent_id, level,path, kids  FROM r WHERE kids = 0

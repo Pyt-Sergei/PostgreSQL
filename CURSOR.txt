@@ -1,0 +1,17 @@
+CREATE OR REPLACE FUNCTION reffunc() RETURNS text  AS $$
+DECLARE
+	str text;
+	curs CURSOR FOR SELECT substr(name,1,1) FROM stariy_gorod.products;
+BEGIN 
+	str := '';
+	FOR x IN curs LOOP
+		str := str || substr( CAST(x AS text ), 2, 1) ;
+	END LOOP;
+RETURN str;
+END ; 
+$$ LANGUAGE plpgsql;
+
+SELECT reffunc() ;
+
+
+

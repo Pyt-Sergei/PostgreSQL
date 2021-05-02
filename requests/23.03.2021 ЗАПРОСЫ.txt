@@ -1,0 +1,36 @@
+1. Получить платеж, сумму всех платежей, включая текущий (баланс).
+
+2. Получить фамилию клиента, его платеж, сумму платежей за предыдущие 2 транзакции, текущий платеж и последующие 2 транзакции.
+
+3. Получить фамилию клиента, его платеж, сумму платежей за текущий месяц.
+
+4. Получить страну с максимальным суммой платежей.
+
+5. Получить город с максимальным количеством платежей.
+
+
+1.
+SELECT payment_id, amount, SUM(amount) OVER(ORDER BY payment_id) FROM payment
+
+SELECT payment_id, last_name,  amount, SUM(amount) OVER(PARTITION BY c.customer_id ORDER BY payment_id) FROM payment p, customer c WHERE c.customer_id = p.customer_id
+
+2.
+SELECT last_name, amount, SUM(amount) OVER (PARTITION BY c.customer_id 
+ORDER BY p.payment_id ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING) FROM customer c, payment p WHERE c.customer_id = p.customer_id
+
+3.
+SELECT last_name, amount,to_char(payment_date, 'Mon YYYY'), SUM(p.amount) OVER(PARTITION BY c.customer_id, to_char(payment_date, 'Mon YYYY') ) FROM customer c, payment p WHERE 
+c.customer_id = p.customer_id 
+
+4.
+SELECT country, SUM(p.amount) summa FROM country con JOIN  city c ON con.country_id = c.country_id 
+JOIN address a ON c.city_id = a.city_id JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id 
+GROUP BY country ORDER BY summa DESC LIMIT 1
+
+5.
+SELECT DISTINCT LAST_VALUE(city) OVER() FROM  
+( SELECT city, COUNT(p.payment_id)  FROM city c JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id ORDER BY count) foo
+
+SELECT city, COUNT(p.payment_id)  FROM city c JOIN address a ON c.city_id = a.city_id 
+JOIN customer ct ON ct.address_id = a.address_id JOIN payment p ON p.customer_id = ct.customer_id GROUP BY c.city_id ORDER BY count DESC LIMIT 1

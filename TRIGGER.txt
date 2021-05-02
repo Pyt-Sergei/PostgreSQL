@@ -1,0 +1,34 @@
+	CREATE TABLE stariy_gorod.audit (
+	id SERIAL PRIMARY KEY,
+	operation varchar NOT NULL,
+	stamp timestamp NOT NULL,
+	product_id INTEGER NOT NULL,
+	product_name text NOT NULL,
+	price numeric
+)
+
+CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
+
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		INSERT INTO stariy_gorod.audit(operation,stamp,product_id,product_name,price) SELECT 'DELETE', now(), OLD.*;
+		RETURN OLD;
+	END IF;
+
+	IF TG_OP = 'UPDATE' THEN
+		INSERT INTO stariy_gorod.audit(operation,stamp,product_id,product_name,price) SELECT 'UPDATE', now(), NEW.*;
+		RETURN NEW;
+	END IF;
+
+	IF TG_OP = 'INSERT' THEN
+		INSERT INTO stariy_gorod.audit(operation,stamp,product_id,product_name,price) SELECT 'INSERT', now(), NEW.*;
+		RETURN NEW;
+	END IF;
+
+	RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER emp_audit
+AFTER INSERT OR UPDATE OR DELETE ON stariy_gorod.products 
+FOR EACH ROW EXECUTE PROCEDURE process_audit();

@@ -1,0 +1,46 @@
+CREATE OR REPLACE FUNCTION isaddress(str varchar) RETURNS boolean AS $$
+
+DECLARE
+    alphabet varchar := 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890_.@';
+	res boolean;
+	dog boolean := FALSE;
+
+BEGIN
+	FOR i IN 1..length(str) LOOP
+		
+		IF substr(str,i,1) = '@' THEN dog := TRUE;
+		END IF;
+		
+		res := FALSE;
+		FOR j in 1..length(alphabet) LOOP
+			IF substr(str,i,1) = substr(alphabet,j,1) THEN
+				res := TRUE;
+				EXIT;
+			END IF;
+		END LOOP;
+		
+		IF NOT res THEN RETURN FALSE;
+		END IF;
+
+		IF substr(str,i,1) = '@' THEN
+			IF  ( substr(str,i) <> '@mail.ru' ) AND ( substr(str,i)  <> '@gmail.com' ) OR ( i = 1 ) THEN RETURN FALSE;
+			ELSE  EXIT;
+			END IF;
+		END IF;
+	END LOOP;
+	
+	IF str = '' OR NOT dog THEN RETURN FALSE;
+	ELSE RETURN TRUE;
+	END IF;
+
+END $$ LANGUAGE plpgsql;
+
+SELECT isaddress('adsbf@gmail.com');
+
+
+Тесты:
+
+@mail.ru - False
+sdvsd    - False
+asfas-@mail.ru  - False
+

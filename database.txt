@@ -1,0 +1,48 @@
+--DROP SCHEMA stariy_gorod CASCADE;
+--CREATE SCHEMA stariy_gorod;
+
+CREATE TABLE stariy_gorod.halls
+(
+	id INTEGER PRIMARY KEY,
+	name VARCHAR(150),
+	capacity INTEGER CHECK ( capacity > 0)
+);
+
+CREATE TABLE stariy_gorod.seats
+(
+	id INTEGER PRIMARY KEY,
+	hall_id INTEGER,
+	FOREIGN KEY (hall_id) REFERENCES stariy_gorod.halls 
+);
+
+CREATE TABLE stariy_gorod.orders
+(
+	id SERIAL PRIMARY KEY,
+	seat_id INTEGER NULL,
+	datetime TIMESTAMP,
+	FOREIGN KEY (seat_id) REFERENCES stariy_gorod.seats  
+);
+
+CREATE TABLE stariy_gorod.products
+(
+	id SERIAL PRIMARY KEY,
+	name TEXT,
+	price NUMERIC CHECK (price >= 0)
+);
+
+CREATE TABLE stariy_gorod.order_list
+(
+	order_id INTEGER NOT NULL,
+	product_id INTEGER NOT NULL,
+	quantity INTEGER, CHECK (quantity > 0),
+	
+	PRIMARY KEY (order_id, product_id),
+	FOREIGN KEY (product_id) REFERENCES stariy_gorod.products ON DELETE RESTRICT,
+	FOREIGN KEY (order_id) REFERENCES stariy_gorod.orders ON DELETE CASCADE	
+);
+
+
+--CREATE INDEX index2 ON stariy_gorod.order_list(product_id );
+
+
+--CREATE OR REPLACE VIEW s2321pogosian.orderview AS SELECT * FROM s2321pogosian.order_list WHERE ( SELECT EXTRACT( SECOND FROM LOCALTIME )::INTEGER %2 = 0 )
