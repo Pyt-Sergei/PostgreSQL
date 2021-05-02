@@ -38,8 +38,8 @@ END $$ LANGUAGE plpgsql;
 SELECT isaddress('adsbf@gmail.com');
 
 
-Тесты:
 
+РўСѓСЃС‚С‹ :
 @mail.ru - False
 sdvsd    - False
 asfas-@mail.ru  - False
